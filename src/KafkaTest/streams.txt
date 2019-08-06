@@ -1,0 +1,33 @@
+  CREATE STREAM viewlivestream_request \
+  (RequestId BIGINT, \
+   CameraId VARCHAR, \
+   ClientId VARCHAR) \
+  WITH (KAFKA_TOPIC='viewlivestream_request', \
+        VALUE_FORMAT='JSON');
+		
+ CREATE STREAM createstreamid_request \
+  WITH (KAFKA_TOPIC='createstreamid_request', \
+        VALUE_FORMAT='JSON') AS \
+  SELECT CameraId, RequestId \ 
+  FROM viewlivestream_request;
+  
+  CREATE STREAM createstreamid_result \
+  (RequestId BIGINT, \
+   CameraId VARCHAR, \
+   StreamId VARCHAR) \
+  WITH (KAFKA_TOPIC='createstreamid_result', \
+        VALUE_FORMAT='JSON');
+  
+ CREATE STREAM viewlivestream_result \
+  WITH (KAFKA_TOPIC='viewlivestream_result', \
+        VALUE_FORMAT='JSON') AS \
+  SELECT vls.RequestId, \
+         vls.CameraId as CameraId, \
+         vls.ClientId, \
+         sid.StreamId, \
+         TRUE as IsSuccess \
+  FROM viewlivestream_request vls INNER JOIN createstreamid_result sid \
+  WITHIN 5 SECONDS \
+  ON vls.RequestId = sid.RequestId;
+  
+  
