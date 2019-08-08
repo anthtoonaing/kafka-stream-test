@@ -3,11 +3,11 @@
    CameraId VARCHAR, \
    ClientId VARCHAR) \
   WITH (KAFKA_TOPIC='viewlivestream_request', \
-        VALUE_FORMAT='JSON');
+        VALUE_FORMAT='JSON', PARTITIONS=1);
 		
  CREATE STREAM createstreamid_request \
   WITH (KAFKA_TOPIC='createstreamid_request', \
-        VALUE_FORMAT='JSON') AS \
+        VALUE_FORMAT='JSON', PARTITIONS=1) AS \
   SELECT CameraId, RequestId \ 
   FROM viewlivestream_request;
   
@@ -16,18 +16,53 @@
    CameraId VARCHAR, \
    StreamId VARCHAR) \
   WITH (KAFKA_TOPIC='createstreamid_result', \
-        VALUE_FORMAT='JSON');
+        VALUE_FORMAT='JSON', PARTITIONS=1);
   
- CREATE STREAM viewlivestream_result \
-  WITH (KAFKA_TOPIC='viewlivestream_result', \
-        VALUE_FORMAT='JSON') AS \
-  SELECT vls.RequestId, \
+  CREATE STREAM getvmsstream_request \
+  WITH (KAFKA_TOPIC='getvmsstream_request', \
+        VALUE_FORMAT='JSON', PARTITIONS=1) AS \
+  SELECT CameraId, RequestId \ 
+  FROM viewlivestream_request;
+  
+   CREATE STREAM getvmsstream_result \
+  (RequestId BIGINT, \
+   CameraId VARCHAR, \
+   StreamUrl VARCHAR) \
+  WITH (KAFKA_TOPIC='getvmsstream_result', \
+        VALUE_FORMAT='JSON', PARTITIONS=1); 
+
+CREATE STREAM viewlivestream_createstreamid AS \
+  SELECT vls.RequestId as RequestId, \
          vls.CameraId as CameraId, \
          vls.ClientId, \
          sid.StreamId, \
          TRUE as IsSuccess \
   FROM viewlivestream_request vls INNER JOIN createstreamid_result sid \
-  WITHIN 5 SECONDS \
   ON vls.RequestId = sid.RequestId;
   
+ CREATE STREAM viewlivestream_result \
+  WITH (KAFKA_TOPIC='viewlivestream_result', \
+        VALUE_FORMAT='JSON', PARTITIONS=1) AS \
+  SELECT vls.RequestId as RequestId, \
+         vls.CameraId as CameraId, \
+         vls.ClientId, \
+         vls.StreamId, \
+		 vms.StreamUrl, \        
+  FROM viewlivestream_createstreamid vls INNER JOIN getvmsstream_result vms \
+  WITHIN 5 SECONDS \
+  ON vls.RequestId = vms.RequestId;
+  
+
+  CREATE TABLE camera \
+  (CameraId VARCHAR, \
+   CameraName VARCHAR) \
+  WITH (KAFKA_TOPIC='camera', \
+        VALUE_FORMAT='JSON', KEY='CameraId');
+
+ CREATE STREAM viewlivestream_result_cameraname \
+  WITH (KAFKA_TOPIC='viewlivestream_result_cameraname', \
+        VALUE_FORMAT='JSON', PARTITIONS=1) AS \
+  SELECT r.*, IFNULL(c.CameraName,r.CameraId) \        
+  FROM viewlivestream_result r LEFT JOIN camera c \
+  ON r.CameraId = c.CameraId;
   

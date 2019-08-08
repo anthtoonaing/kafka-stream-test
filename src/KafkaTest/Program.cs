@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace KafkaTest {
     class Program {
-        public static string _bootstrapServers = "192.168.0.166:9092";
+        public static string _bootstrapServers = "192.168.0.178:9092";
         static string topic = "users";
+        static ViewLiveStreamWorkflow _workflow = new ViewLiveStreamWorkflow(_bootstrapServers);
         public static void Main()
         {
 
@@ -15,26 +16,37 @@ namespace KafkaTest {
             //Task.Run(() => Consume("g1", "g1-c3"));
             //Task.Run(() => Consume("g1", "g1-c4"));
             //Task.Run(() => Consume("g1", "g1-c5"));
-            var processorTask = RunCreateStreamProcessor();
+            var cameraProcess = new UpdateCameraProcessor(_bootstrapServers, "camera");
+            var _ = RunCreateStreamProcessor();
+            var __ = RunGetVmsStreamProcessor();
             do
             {
-                //ProduceUser().Wait();
-                
-                RunWorkflow().Wait();
+                Console.Write("CameraId(,CameraName):");
+                var cameraInfo = Console.ReadLine();
+                var split = cameraInfo.Split(',');
+                var id = split[0];
+                if(split.Length > 1)
+                {
+                    var name = split[1];
+                    cameraProcess.Run(id, name).Wait();
+                }
+                RunWorkflow(id).Wait();
                 
                 Console.ReadLine();
             } while (true);
-            processorTask.Wait();
+            
             Console.ReadLine();
         }
 
-        private static async Task RunWorkflow()
+        public static async Task UpdateCamera() {
+            
+            
+        }
+        private static async Task RunWorkflow(string cameraId)
         {
-            Console.WriteLine("Starting View Live Stream Workflow ...");
-            using (var workflow = new ViewLiveStreamWorkflow(_bootstrapServers)) {
-                await workflow.Start();
-            }
-            Console.WriteLine("View Live Stream Workflow Completed!");
+            Console.WriteLine("Starting View Live Stream Request ...");
+            await _workflow.Start(cameraId);
+            //Console.WriteLine("View Live Stream Requested");
         }
 
         private static async Task RunCreateStreamProcessor()
@@ -45,6 +57,16 @@ namespace KafkaTest {
                 await processor.Run();
             }
             Console.WriteLine("Create Stream Processor Completed!");
+        }
+
+        private static async Task RunGetVmsStreamProcessor()
+        {
+            Console.WriteLine("Starting GetVmsStreamProcessor ...");
+            using (var processor = new GetVmsStreamProcessor(_bootstrapServers, "getvmsstream_request", "getvmsstream_result"))
+            {
+                await processor.Run();
+            }
+            Console.WriteLine("GetVmsStreamProcessor Completed!");
         }
 
         public static async Task ProduceUser()

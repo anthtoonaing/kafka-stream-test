@@ -10,7 +10,7 @@ namespace KafkaTest {
         IProducer<string, string> _producer;
         IConsumer<string, string> _consumer;
         const string ViewLiveStreamRequestTopic = "viewlivestream_request";
-        const string ViewLiveStreamResultTopic = "viewlivestream_result";
+        const string ViewLiveStreamResultTopic = "viewlivestream_result_cameraname";
         string _bootstrapServers;
         public ViewLiveStreamWorkflow(string bootstrapServers) {
             _bootstrapServers = bootstrapServers;
@@ -29,19 +29,18 @@ namespace KafkaTest {
             };
             _producer = new ProducerBuilder<string, string>(producer_config).Build();
             _consumer = new ConsumerBuilder<string, string>(consumer_config).Build();
-                
+            Task.Run(()=> SubscribeResult());
         }
 
-        public async Task Start()
+        public async Task Start(string cameraId)
         {
-            await ProduceRequest();
-            SubscribeResult();
+            await ProduceRequest(cameraId);
+            
         }
-        ViewLiveStreamRequest _request;
-        private async Task ProduceRequest()
+        private async Task ProduceRequest(string cameraId)
         {
-            _request = new ViewLiveStreamRequest { CameraId = "C01", ClientId = "A01" };
-            var value = JsonConvert.SerializeObject(_request);
+            var request = new ViewLiveStreamRequest { CameraId = cameraId, ClientId = "A01" };
+            var value = JsonConvert.SerializeObject(request);
             await _producer.ProduceAsync(ViewLiveStreamRequestTopic, new Message<string, string> { Value = value });
             Console.WriteLine($"Request sent:{value}");
         }
@@ -60,9 +59,6 @@ namespace KafkaTest {
                         var result = JsonConvert.DeserializeObject<ViewLiveStreamResult>(cr.Value);
                         _consumer.Commit();
                         Console.WriteLine($"Received result '{cr.Value}' at: '{cr.TopicPartitionOffset}'.");
-                        if (result.RequestId == _request.RequestId) {
-                            break;
-                        }
                         
                     }
                     catch (ConsumeException e)
