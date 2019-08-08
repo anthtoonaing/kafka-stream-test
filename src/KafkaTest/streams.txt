@@ -38,6 +38,7 @@ CREATE STREAM viewlivestream_createstreamid AS \
          sid.StreamId, \
          TRUE as IsSuccess \
   FROM viewlivestream_request vls INNER JOIN createstreamid_result sid \
+  WITHIN 5 SECONDS \
   ON vls.RequestId = sid.RequestId;
   
  CREATE STREAM viewlivestream_result \
@@ -47,7 +48,7 @@ CREATE STREAM viewlivestream_createstreamid AS \
          vls.CameraId as CameraId, \
          vls.ClientId, \
          vls.StreamId, \
-		 vms.StreamUrl, \        
+         vms.StreamUrl \        
   FROM viewlivestream_createstreamid vls INNER JOIN getvmsstream_result vms \
   WITHIN 5 SECONDS \
   ON vls.RequestId = vms.RequestId;
@@ -57,7 +58,7 @@ CREATE STREAM viewlivestream_createstreamid AS \
   (CameraId VARCHAR, \
    CameraName VARCHAR) \
   WITH (KAFKA_TOPIC='camera', \
-        VALUE_FORMAT='JSON', KEY='CameraId');
+        VALUE_FORMAT='JSON', KEY='CameraId', PARTITIONS=1);
 
  CREATE STREAM viewlivestream_result_cameraname \
   WITH (KAFKA_TOPIC='viewlivestream_result_cameraname', \
