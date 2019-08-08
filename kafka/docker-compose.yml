@@ -1,0 +1,23 @@
+version: '2'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.178
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  ksql:
+    image: confluentinc/cp-ksql-server:5.3.0
+    ports:
+      - "18088:8088"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: 192.168.0.178:9092
+      KSQL_LISTENERS: http://0.0.0.0:8088/
+      KSQL_KSQL_SERVICE_ID: ksql_service
