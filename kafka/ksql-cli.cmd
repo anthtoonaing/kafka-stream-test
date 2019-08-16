@@ -1,1 +1,1 @@
-docker run -it confluentinc/cp-ksql-cli http://192.168.0.178:18088
+docker-compose exec ksql-cli ksql http://broker:8088

@@ -1,0 +1,1 @@
+docker-compose exec ksql-datagen ksql-datagen schema=impressions.avro format=json topic=impressions key=impressionid bootstrap-server=broker:29092

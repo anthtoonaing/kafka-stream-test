@@ -1,0 +1,1 @@
+docker-compose exec ksql-datagen ksql-datagen quickstart=users format=json topic=users bootstrap-server=broker:29092

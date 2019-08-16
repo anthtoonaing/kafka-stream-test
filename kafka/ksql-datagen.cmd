@@ -1,0 +1,1 @@
+docker-compose exec ksql-datagen bash
