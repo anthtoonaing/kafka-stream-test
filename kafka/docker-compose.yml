@@ -86,6 +86,9 @@ services:
       - ksql-server
       - broker
       - schema-registry
+    volumes:
+        - ./schemas:/home/schemas
+        
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                        cub kafka-ready -b broker:29092 1 40 && \
                        echo Waiting for Confluent Schema Registry to be ready... && \

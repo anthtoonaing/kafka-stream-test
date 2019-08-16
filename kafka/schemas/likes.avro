@@ -1,0 +1,19 @@
+{
+        "namespace": "streams",
+        "name": "like",
+        "type": "record",
+        "fields": [
+                {"name": "userid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "User_[1-9]"
+                    }
+                }},
+                {"name": "pageid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "Page_[1-9][0-9]"
+                    }
+                }}
+        ]
+}
