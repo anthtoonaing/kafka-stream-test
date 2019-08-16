@@ -1,1 +1,1 @@
-docker-compose exec ksql-cli ksql http://broker:8088
+docker-compose exec ksql-cli ksql http://ksql-server:8088
